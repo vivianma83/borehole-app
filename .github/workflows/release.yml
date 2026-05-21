@@ -48,7 +48,9 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: Install JS deps
-        run: npm ci --legacy-peer-deps
+        # 用 install 不用 ci：我们 deps 里有些 peer 冲突，需要 --legacy-peer-deps，
+        # 而 npm ci 在 lockfile 与 package.json 有歧义时直接失败。install 更宽容。
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Build app
         run: npm run tauri build -- ${{ matrix.args }}
