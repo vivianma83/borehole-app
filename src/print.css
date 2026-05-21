@@ -1,0 +1,17 @@
+/* 打印样式 —— 跟 borehole-log-pro 一致：A3 portrait，4mm margin，SVG 按宽自适 */
+@media print {
+  body { background: #fff; margin: 0; min-height: 0; }
+  .no-print { display: none !important; }
+  /* 让 chart-host 占满 + SVG 自适应到一页 */
+  .chart-host { overflow: visible !important; max-height: none !important; }
+  .chart-host svg {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100%;
+    max-height: 100vh;
+    page-break-before: avoid;
+    page-break-inside: auto;
+  }
+  @page { size: A3 portrait; margin: 4mm; }
+}

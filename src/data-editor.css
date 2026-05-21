@@ -1,0 +1,22 @@
+/* DataEditor Modal 内的 Tabs 撑满 + 内部内容滚动 */
+.data-editor-tabs-wrap .ant-tabs {
+  height: 100%;
+}
+.data-editor-tabs-wrap .ant-tabs-content-holder {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+}
+.data-editor-tabs-wrap .ant-tabs-content {
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+.data-editor-tabs-wrap .ant-tabs-tabpane {
+  height: 100%;
+}
+.data-editor-tabs-wrap .ant-tabs-tabpane > div {
+  /* tabContent wrapper：撑满 + 滚动 */
+  height: 100%;
+}

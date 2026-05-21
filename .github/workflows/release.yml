@@ -1,0 +1,71 @@
+name: Release Build
+
+# 触发条件：
+#   - 手动从 GitHub UI 点 "Run workflow"
+#   - 或推送形如 v0.1.0 / v1.2.3 的 tag（推荐用法：开发完了打 tag → 自动出包）
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest        # Apple Silicon runner
+            args: '--target aarch64-apple-darwin'
+            bundle_glob: '**/bundle/dmg/*.dmg'
+          - platform: macos-13            # Intel runner（兼容老 Mac 用户）
+            args: '--target x86_64-apple-darwin'
+            bundle_glob: '**/bundle/dmg/*.dmg'
+          - platform: windows-latest
+            args: ''
+            bundle_glob: '**/bundle/{msi,nsis}/*.*'
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust (with target)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin' || matrix.platform == 'macos-13' && 'x86_64-apple-darwin' || '' }}
+
+      - name: Cache Rust deps
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install JS deps
+        run: npm ci --legacy-peer-deps
+
+      - name: Build app
+        run: npm run tauri build -- ${{ matrix.args }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: borehole-app-${{ matrix.platform }}
+          path: src-tauri/target/**/release/bundle/{dmg,msi,nsis}/*
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Create / update GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: src-tauri/target/**/release/bundle/{dmg,msi,nsis}/*
+          name: ${{ github.ref_name }}
+          draft: true
+          generate_release_notes: true
